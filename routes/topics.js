@@ -10,7 +10,7 @@ router.get('/page/:pageNo',checkAuth,(req,res) => {
     var query = {}
     if(pageNo < 0 || pageNo === 0) {
           response = {"error" : true,"message" : "invalid page number, should start with 1"};
-          return res.status(402).json(response)
+          return res.status(400).json(response)
     }
     query.skip = size * (pageNo - 1)
     query.limit = size
@@ -33,7 +33,7 @@ router.get('/page/:pageNo',checkAuth,(req,res) => {
 router.get('/', checkAuth, async (req, res) => {
     try {
         const topics = await Topic.find();
-        res.status(201).json(topics);
+        res.status(200).json(topics);
     } catch (error) {
         res.status(500).json({ message: error.message })
     }
@@ -43,7 +43,7 @@ router.get('/', checkAuth, async (req, res) => {
 router.get('/:id', checkAuth, async (req, res) => {
     try {
         topic = await Topic.findById(req.params.id);
-        res.status(201).send(topic);
+        res.status(200).send(topic);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -63,7 +63,7 @@ router.post('/', checkAuth, async (req, res) => {
         const newTopic = await nTopic.save();
         res.status(201).json(newTopic);
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        res.status(500).json({ message: error.message });
     }
 })
 
@@ -82,9 +82,9 @@ router.patch('/:id', checkAuth, async (req, res) => {
         }
         try {
             var nTopic = await topic.save();
-            res.status(201).json(nTopic);
+            res.status(200).json(nTopic);
         } catch (error) {
-            res.status(400).json({ message: error.message });
+            res.status(500).json({ message: error.message });
         }
     }
 })
@@ -92,17 +92,28 @@ router.patch('/:id', checkAuth, async (req, res) => {
 //brisanje teme
 router.delete('/:id', checkAuth, async (req, res) => {
     var id = req.userData.userId;
-    var topic = await Topic.findById(req.params.id);
-    if (topic.userID != id) {
-        res.status(401).json({ message: 'Mozete obrisati samo svoju temu.' })
+    try {
+        
+        var topic = await Topic.findById(req.params.id);
+    } catch (error) {
+        res.status(500).json({message:error.message});
+    }
+    if(topic!=null){
+
+        if (topic.userID != id) {
+            res.status(401).json({ message: 'Mozete obrisati samo svoju temu.' })
+        }
+        else{
+            try {
+                await Topic.findByIdAndDelete(req.params.id)
+                res.status(200).json({ message: 'Deleted!' })
+            } catch (error) {
+                res.status(500).json({ message: error.message })
+            }
+        }
     }
     else{
-        try {
-            await Topic.findByIdAndDelete(req.params.id)
-            res.status(201).json({ message: 'Deleted!' })
-        } catch (error) {
-            res.status(500).json({ message: error.message })
-        }
+        res.status(204).json({message:'Tema nije pronađena!'});
     }
     
 })
@@ -115,7 +126,7 @@ router.get('/title/:naziv',checkAuth,async(req,res)=>{
     ]}, function (err, data) {
         if(err)
         res.status(500).json({message:err.message});
-        res.status(201).json(data);
+        res.status(200).json(data);
     });
 })
 module.exports = router;

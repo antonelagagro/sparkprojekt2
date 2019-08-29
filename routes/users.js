@@ -20,7 +20,7 @@ router.post('/signup', (req, res, next) => {
             else {
                 mailcheck.check(req.body.email, (err, response) => {
                     if (err) {
-                        return res.status(409).json({ message: 'Mail does not exist!' })
+                        return res.status(400).json({ message: 'Mail does not exist!' })
                     }
                     else {
                         var user = new User({
@@ -31,17 +31,17 @@ router.post('/signup', (req, res, next) => {
                             prihvaceniUvjetiKoristenja: req.body.prihvaceniUvjetiKoristenja
                         })
                         if (user.lozinka.length < 8)
-                            res.status(422).json({ message: 'Lozinka mora imati minimalno 8 karaktera.' })
+                            res.status(400).json({ message: 'Lozinka mora imati minimalno 8 karaktera.' })
                         if (user.lozinka == user.ponovljenaLozinka && user.prihvaceniUvjetiKoristenja == true) {
                             try {
                                 var nUser = user.save();
-                                res.status(201).json({ message: 'User created' })
+                                res.status(200).json({ message: 'User created' })
                             } catch (error) {
                                 res.status(500).json({ message: error.message });
                             }
                         }
                         else
-                               res.status(422).json({ message: 'Neispravno uneseni podaci!' });
+                               res.status(400).json({ message: 'Neispravno uneseni podaci!' });
                     }
                 })
             }
@@ -95,7 +95,7 @@ router.delete('/:id', async (req, res) => {
 
     try {
         await User.findByIdAndDelete(req.params.id);
-        res.status(201).json({ message: 'Deleted!' })
+        res.status(200).json({ message: 'Deleted!' })
     } catch (error) {
         res.status(500).json({ message: error.message })
     }
@@ -109,7 +109,7 @@ router.post('/reset', async (req, res) => {
 
     User.find({ email: email }, (err, obj) => {
         if (obj[0] == undefined)
-            res.json({ message: 'User not found!' });
+            res.status(400).json({ message: 'User not found!' });
         else {
             var user = obj[0].toObject();
             var pass = genpass.generate({
@@ -131,7 +131,7 @@ router.post('/reset', async (req, res) => {
                     if (err)
                         res.status(500).json({message:err.message});
                     else
-                        res.status(201).json({ message: 'Check your new password on mail' });
+                        res.status(200).json({ message: 'Check your new password on mail' });
 
                 });
             } catch (error) {

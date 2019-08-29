@@ -12,7 +12,7 @@ var checkAuth = require('../middleware/check-auth');
 router.get('/', checkAuth, async (req, res) => {
     try {
         const comments = await Comment.find();
-        res.status(201).json(comments);
+        res.status(200).json(comments);
     } catch (error) {
         res.status(500).json({ message: error.message })
     }
@@ -30,7 +30,7 @@ router.get('/:id', checkAuth, async (req, res) => {
                 list.push(element);
             }
         });
-        res.status(201).send(list);
+        res.status(200).send(list);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -78,7 +78,7 @@ router.patch('/:id', checkAuth, async (req, res) => {
         }
         try {
             var nComment = await comment.save();
-            res.status(201).json(nComment);
+            res.status(200).json(nComment);
         } catch (error) {
             res.status(500).json({ message: error.message });
         }
@@ -102,7 +102,7 @@ router.delete('/:id', checkAuth, async (req, res) => {
 
             try {
                 await Comment.findByIdAndDelete(req.params.id)
-                res.status(201).json({ message: 'Deleted!' })
+                res.status(200).json({ message: 'Deleted!' })
             } catch (error) {
                 res.status(500).json({ message: error.message })
 
@@ -110,7 +110,7 @@ router.delete('/:id', checkAuth, async (req, res) => {
         }
     }
     else {
-        res.json({ message: 'Komentar nije pronađen' });
+        res.status(204).json({ message: 'Komentar nije pronađen' });
 
     }
 })
@@ -128,7 +128,7 @@ router.get('/text/:text', checkAuth, async (req, res) => {
     }, function (err, data) {
         if (err)
             res.status(500).json({ message: err.message });
-        res.status(201).json(data);
+        res.status(200).json(data);
     });
 })
 
