@@ -31,17 +31,17 @@ router.post('/signup', (req, res, next) => {
                             prihvaceniUvjetiKoristenja: req.body.prihvaceniUvjetiKoristenja
                         })
                         if (user.lozinka.length < 8)
-                            res.status(400).json({ message: 'Lozinka mora imati minimalno 8 karaktera.' })
+                            return res.status(400).json({ message: 'Lozinka mora imati minimalno 8 karaktera.' })
                         if (user.lozinka == user.ponovljenaLozinka && user.prihvaceniUvjetiKoristenja == true) {
                             try {
                                 var nUser = user.save();
-                                res.status(200).json({ message: 'User created' })
+                                return res.status(200).json({ message: 'User created' })
                             } catch (error) {
-                                res.status(500).json({ message: error.message });
+                                return res.status(500).json({ message: error.message });
                             }
                         }
                         else
-                               res.status(400).json({ message: 'Neispravno uneseni podaci!' });
+                            return res.status(400).json({ message: 'Neispravno uneseni podaci!' });
                     }
                 })
             }
@@ -95,9 +95,9 @@ router.delete('/:id', async (req, res) => {
 
     try {
         await User.findByIdAndDelete(req.params.id);
-        res.status(200).json({ message: 'Deleted!' })
+        return res.status(200).json({ message: 'Deleted!' })
     } catch (error) {
-        res.status(500).json({ message: error.message })
+        return res.status(500).json({ message: 'Korisnik ne postoji!' })
     }
 
 })
@@ -109,7 +109,7 @@ router.post('/reset', async (req, res) => {
 
     User.find({ email: email }, (err, obj) => {
         if (obj[0] == undefined)
-            res.status(400).json({ message: 'User not found!' });
+            return res.status(400).json({ message: 'User not found!' });
         else {
             var user = obj[0].toObject();
             var pass = genpass.generate({
@@ -129,13 +129,13 @@ router.post('/reset', async (req, res) => {
                 mongoose.set('useFindAndModify', false);
                 User.findOneAndUpdate(query, { $set: { lozinka: pass, ponovljenaLozinka: pass } }, { new: true }, (err, doc) => {
                     if (err)
-                        res.status(500).json({message:err.message});
+                        return res.status(500).json({ message: err.message });
                     else
-                        res.status(200).json({ message: 'Check your new password on mail' });
+                        return res.status(200).json({ message: 'Check your new password on mail' });
 
                 });
             } catch (error) {
-                res.status(500).json({ message: error.message })
+                return res.status(500).json({ message: error.message })
             }
 
         }

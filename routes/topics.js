@@ -4,38 +4,38 @@ const Topic = require('../models/topics')
 const checkAuth = require('../middleware/check-auth')
 
 //paginacija
-router.get('/page/:pageNo',checkAuth,(req,res) => {
+router.get('/page/:pageNo', checkAuth, (req, res) => {
     var pageNo = parseInt(req.params.pageNo)
     var size = 5;
     var query = {}
-    if(pageNo < 0 || pageNo === 0) {
-          response = {"error" : true,"message" : "invalid page number, should start with 1"};
-          return res.status(400).json(response)
+    if (pageNo < 0 || pageNo === 0) {
+        response = { "error": true, "message": "invalid page number, should start with 1" };
+        return res.status(400).json(response)
     }
     query.skip = size * (pageNo - 1)
     query.limit = size
-         Topic.countDocuments({},function(err,totalCount) {
-               if(err) {
-                 response = {"error" : true,"message" : "Error fetching data"}
-               }
-               Topic.find({},{},query,function(err,data) {
-              if(err) {
-                  response = {"error" : true,"message" : "Error fetching data"};
-              } else {
-                  var totalPages = Math.ceil(totalCount / size)
-                  response = {"error" : false,"message" : data,"pages": totalPages};
-              }
-              res.json(response);
-           });
-         })
-  })
+    Topic.countDocuments({}, function (err, totalCount) {
+        if (err) {
+            response = { "error": true, "message": "Error fetching data" }
+        }
+        Topic.find({}, {}, query, function (err, data) {
+            if (err) {
+                response = { "error": true, "message": "Error fetching data" };
+            } else {
+                var totalPages = Math.ceil(totalCount / size)
+                response = { "error": false, "message": data, "pages": totalPages };
+            }
+            return res.json(response);
+        });
+    })
+})
 //get sve teme
 router.get('/', checkAuth, async (req, res) => {
     try {
         const topics = await Topic.find();
-        res.status(200).json(topics);
+        return res.status(200).json(topics);
     } catch (error) {
-        res.status(500).json({ message: error.message })
+        return res.status(500).json({ message: error.message })
     }
 })
 
@@ -43,9 +43,9 @@ router.get('/', checkAuth, async (req, res) => {
 router.get('/:id', checkAuth, async (req, res) => {
     try {
         topic = await Topic.findById(req.params.id);
-        res.status(200).send(topic);
+        return res.status(200).send(topic);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        return res.status(500).json({ message: error.message });
     }
 })
 
@@ -53,7 +53,7 @@ router.get('/:id', checkAuth, async (req, res) => {
 //kreiranje teme
 router.post('/', checkAuth, async (req, res) => {
     res.setHeader("Content-Type", "application/json");
-    var id=req.userData.userId;
+    var id = req.userData.userId;
     const nTopic = new Topic({
         title: req.body.title,
         text: req.body.text,
@@ -61,30 +61,33 @@ router.post('/', checkAuth, async (req, res) => {
     })
     try {
         const newTopic = await nTopic.save();
-        res.status(201).json(newTopic);
+        return res.status(201).json(newTopic);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        return res.status(500).json({ message: error.message });
     }
 })
 
 //izmjena teksta teme
 router.patch('/:id', checkAuth, async (req, res) => {
     var id = req.userData.userId;
-
-    var topic = await Topic.findById(req.params.id);
-    if (topic.userID != id) {
-        res.status(401).json({ message: 'Mozete izmijeniti samo svoju temu.' });
+    try {
+        var topic = await Topic.findById(req.params.id);
+    } catch (error) {
+        return res.status(400).json({ message: 'Tema ne postoji' });
     }
-    else{
+    if (topic.userID != id) {
+        return res.status(401).json({ message: 'Mozete izmijeniti samo svoju temu.' });
+    }
+    else {
 
         if (req.body.text != null) {
             topic.text = req.body.text;
         }
         try {
             var nTopic = await topic.save();
-            res.status(200).json(nTopic);
+            return res.status(200).json(nTopic);
         } catch (error) {
-            res.status(500).json({ message: error.message });
+            return res.status(500).json({ message: error.message });
         }
     }
 })
@@ -93,40 +96,38 @@ router.patch('/:id', checkAuth, async (req, res) => {
 router.delete('/:id', checkAuth, async (req, res) => {
     var id = req.userData.userId;
     try {
-        
+
         var topic = await Topic.findById(req.params.id);
     } catch (error) {
-        res.status(500).json({message:error.message});
+        return res.status(400).json({ message: 'Tema ne postoji' });
     }
-    if(topic!=null){
 
-        if (topic.userID != id) {
-            res.status(401).json({ message: 'Mozete obrisati samo svoju temu.' })
-        }
-        else{
-            try {
-                await Topic.findByIdAndDelete(req.params.id)
-                res.status(200).json({ message: 'Deleted!' })
-            } catch (error) {
-                res.status(500).json({ message: error.message })
-            }
+
+    if (topic.userID != id) {
+        return res.status(401).json({ message: 'Mozete obrisati samo svoju temu.' })
+    }
+    else {
+        try {
+            await Topic.findByIdAndDelete(req.params.id)
+            return res.status(200).json({ message: 'Deleted!' })
+        } catch (error) {
+            return res.status(500).json({ message: error.message })
         }
     }
-    else{
-        res.status(204).json({message:'Tema nije pronađena!'});
-    }
-    
 })
+
 //search po nazivu teme
-router.get('/title/:naziv',checkAuth,async(req,res)=>{
-    var titleT=req.params.naziv.toLowerCase();
-    
-    Topic.find({$or: [
-        { title: { "$regex": titleT, "$options": "i" } }
-    ]}, function (err, data) {
-        if(err)
-        res.status(500).json({message:err.message});
-        res.status(200).json(data);
+router.get('/title/:naziv', checkAuth, async (req, res) => {
+    var titleT = req.params.naziv.toLowerCase();
+
+    Topic.find({
+        $or: [
+            { title: { "$regex": titleT, "$options": "i" } }
+        ]
+    }, function (err, data) {
+        if (err)
+            return res.status(500).json({ message: err.message });
+        return res.status(200).json(data);
     });
 })
 module.exports = router;

@@ -12,9 +12,9 @@ var checkAuth = require('../middleware/check-auth');
 router.get('/', checkAuth, async (req, res) => {
     try {
         const comments = await Comment.find();
-        res.status(200).json(comments);
+        return res.status(200).json(comments);
     } catch (error) {
-        res.status(500).json({ message: error.message })
+        return res.status(500).json({ message: error.message })
     }
 })
 
@@ -22,25 +22,29 @@ router.get('/', checkAuth, async (req, res) => {
 router.get('/:id', checkAuth, async (req, res) => {
     try {
         var collection = await Comment.find();
-      
+
         var list = Array();
         collection.forEach(element => {
-           
+
             if (element.topicID == req.params.id) {
                 list.push(element);
             }
         });
-        res.status(200).send(list);
+        return res.status(200).send(list);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        return res.status(500).json({ message: error.message });
     }
 })
 
 //kreiranje komentara
 router.post('/', checkAuth, async (req, res) => {
     var id = req.userData.userId;
+    try {
+        var topic = Topic.findById(req.body.topicID);
 
-    var topic = Topic.findById(req.body.topicID);
+    } catch (error) {
+        return res.json({ message: 'Tema ne postoji!' });
+    }
 
     if (topic !== null) {
         const nComment = new Comment({
@@ -50,13 +54,13 @@ router.post('/', checkAuth, async (req, res) => {
         })
         try {
             const newComment = await nComment.save();
-            res.status(201).json(newComment);
+            return res.status(201).json(newComment);
         } catch (error) {
-            res.status(400).json({ message: error.message });
+            return res.status(400).json({ message: error.message });
         }
     }
     else {
-        res.status(404).json({ message: 'Topic does not exist' });
+        return res.status(404).json({ message: 'Topic does not exist' });
     }
 })
 
@@ -66,11 +70,11 @@ router.patch('/:id', checkAuth, async (req, res) => {
     try {
         var comment = await Comment.findById(req.params.id);
     } catch (error) {
-        res.status(500).json({ message: error.message })
+        return res.status(500).json({ message: 'Komentar nije pronađen!' })
     }
 
     if (comment.userID != id) {
-        res.status(401).json({ message: 'Mozete izmijeniti samo svoj komentar!' });
+        return res.status(401).json({ message: 'Mozete izmijeniti samo svoj komentar!' });
     }
     else {
         if (req.body.text != null) {
@@ -78,9 +82,9 @@ router.patch('/:id', checkAuth, async (req, res) => {
         }
         try {
             var nComment = await comment.save();
-            res.status(200).json(nComment);
+            return res.status(200).json(nComment);
         } catch (error) {
-            res.status(500).json({ message: error.message });
+            return res.status(500).json({ message: error.message });
         }
     }
 })
@@ -91,28 +95,24 @@ router.delete('/:id', checkAuth, async (req, res) => {
     try {
         var comment = await Comment.findById(req.params.id);
     } catch (error) {
-        res.status(500).json({message:error.message});        
+        return res.status(400).json({ message: 'Komentar nije pronađen!' });
     }
-    if (comment != null) {
 
-        if (comment.userID != id) {
-            res.status(401).json({ message: 'Mozete izbrisati samo svoj komentar!' });
-        }
-        else {
 
-            try {
-                await Comment.findByIdAndDelete(req.params.id)
-                res.status(200).json({ message: 'Deleted!' })
-            } catch (error) {
-                res.status(500).json({ message: error.message })
-
-            }
-        }
+    if (comment.userID != id) {
+        return res.status(401).json({ message: 'Mozete izbrisati samo svoj komentar!' });
     }
     else {
-        res.status(204).json({ message: 'Komentar nije pronađen' });
 
+        try {
+            await Comment.findByIdAndDelete(req.params.id)
+            return res.status(200).json({ message: 'Deleted!' })
+        } catch (error) {
+            return res.status(500).json({ message: error.message })
+
+        }
     }
+
 })
 
 
@@ -127,8 +127,8 @@ router.get('/text/:text', checkAuth, async (req, res) => {
         ]
     }, function (err, data) {
         if (err)
-            res.status(500).json({ message: err.message });
-        res.status(200).json(data);
+            return res.status(500).json({ message: err.message });
+        return res.status(200).json(data);
     });
 })
 
