@@ -76,7 +76,7 @@ router.patch('/:id', checkAuth, async (req, res) => {
         return res.status(400).json({ message: 'Tema ne postoji' });
     }
     if (topic.userID != id) {
-        return res.status(401).json({ message: 'Mozete izmijeniti samo svoju temu.' });
+        return res.status(403).json({ message: 'Mozete izmijeniti samo svoju temu.' });
     }
     else {
 
@@ -104,7 +104,7 @@ router.delete('/:id', checkAuth, async (req, res) => {
 
 
     if (topic.userID != id) {
-        return res.status(401).json({ message: 'Mozete obrisati samo svoju temu.' })
+        return res.status(403).json({ message: 'Mozete obrisati samo svoju temu.' })
     }
     else {
         try {

@@ -74,7 +74,7 @@ router.patch('/:id', checkAuth, async (req, res) => {
     }
 
     if (comment.userID != id) {
-        return res.status(401).json({ message: 'Mozete izmijeniti samo svoj komentar!' });
+        return res.status(403).json({ message: 'Mozete izmijeniti samo svoj komentar!' });
     }
     else {
         if (req.body.text != null) {
@@ -100,7 +100,7 @@ router.delete('/:id', checkAuth, async (req, res) => {
 
 
     if (comment.userID != id) {
-        return res.status(401).json({ message: 'Mozete izbrisati samo svoj komentar!' });
+        return res.status(403).json({ message: 'Mozete izbrisati samo svoj komentar!' });
     }
     else {
 
